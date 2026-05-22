@@ -124,11 +124,16 @@ static void show_svg(const char* path) {
     nsvgDeleteRasterizer(rast);
     nsvgDelete(img);
 
-    // 90° CW: portrait pixel (dx, dy) ← landscape pixel (sx=dy, sy=rH-1-dx)
+    // 90° CW rotation; ROTATE_180 adds a further 180° flip (= 270° CW / 90° CCW)
     for (int dy = 0; dy < LCD_HEIGHT; dy++) {
         for (int dx = 0; dx < LCD_WIDTH; dx++) {
+#ifdef ROTATE_180
+            int sx = (rW - 1) - dy;
+            int sy = dx;
+#else
             int sx = dy;
             int sy = (rH - 1) - dx;
+#endif
             const unsigned char* p = rgba + ((size_t)sy * rW + sx) * 4;
             uint8_t a = p[3];
             uint8_t r = (uint8_t)(((uint16_t)p[0] * a + 255u * (255u - a)) / 255u);
