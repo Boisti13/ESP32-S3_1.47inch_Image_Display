@@ -66,11 +66,6 @@ void LCD_Init(void)
   //************* Start Initial Sequence **********// 
   LCD_WriteCommand(0x11);
   delay(120);
-  LCD_WriteCommand(0x36);
-  if (HORIZONTAL)
-      LCD_WriteData(0x00);
-  else
-      LCD_WriteData(0x70);
 
   LCD_WriteCommand(0x3A);
   LCD_WriteData(0x05);
@@ -150,7 +145,11 @@ void LCD_Init(void)
 
   LCD_WriteCommand(0x11);
   delay(120);
-  LCD_WriteCommand(0x29); 
+
+  LCD_WriteCommand(0x36);
+  LCD_WriteData(0x00);
+
+  LCD_WriteCommand(0x29);
 }
 /******************************************************************************
 function: Set the cursor position
@@ -161,30 +160,44 @@ parameter :
     Yend  :   End uint16_t coordinatesen
 ******************************************************************************/
 void LCD_SetCursor(uint16_t Xstart, uint16_t Ystart, uint16_t Xend, uint16_t  Yend)
-{ 
-  if (HORIZONTAL) {
-    // set the X coordinates
+{
+#if defined(ROTATE_180)
+  const int mode = HORIZONTAL_FLIPPED;
+#else
+  const int mode = HORIZONTAL;
+#endif
+
+  if (mode == HORIZONTAL) {
     LCD_WriteCommand(0x2A);
     LCD_WriteData(Xstart >> 8);
     LCD_WriteData(Xstart + Offset_X);
     LCD_WriteData(Xend >> 8);
     LCD_WriteData(Xend + Offset_X);
-    
-    // set the Y coordinates
     LCD_WriteCommand(0x2B);
     LCD_WriteData(Ystart >> 8);
     LCD_WriteData(Ystart + Offset_Y);
     LCD_WriteData(Yend >> 8);
     LCD_WriteData(Yend + Offset_Y);
-  }
-  else {
-    // set the X coordinates
+  } else if (mode == HORIZONTAL_FLIPPED) {
+    // Mirror rows: row N is sent to physical row (LCD_HEIGHT-1-N)
+    uint16_t flipYstart = (uint16_t)(LCD_HEIGHT - 1) - Yend;
+    uint16_t flipYend   = (uint16_t)(LCD_HEIGHT - 1) - Ystart;
+    LCD_WriteCommand(0x2A);
+    LCD_WriteData(Xstart >> 8);
+    LCD_WriteData(Xstart + Offset_X);
+    LCD_WriteData(Xend >> 8);
+    LCD_WriteData(Xend + Offset_X);
+    LCD_WriteCommand(0x2B);
+    LCD_WriteData(flipYstart >> 8);
+    LCD_WriteData(flipYstart + Offset_Y);
+    LCD_WriteData(flipYend >> 8);
+    LCD_WriteData(flipYend + Offset_Y);
+  } else {
     LCD_WriteCommand(0x2A);
     LCD_WriteData(Ystart >> 8);
     LCD_WriteData(Ystart + Offset_Y);
     LCD_WriteData(Yend >> 8);
     LCD_WriteData(Yend + Offset_Y);
-    // set the Y coordinates
     LCD_WriteCommand(0x2B);
     LCD_WriteData(Xstart >> 8);
     LCD_WriteData(Xstart + Offset_X);

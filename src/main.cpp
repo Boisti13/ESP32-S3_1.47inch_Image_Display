@@ -124,16 +124,10 @@ static void show_svg(const char* path) {
     nsvgDeleteRasterizer(rast);
     nsvgDelete(img);
 
-    // 90° CW rotation; ROTATE_180 adds a further 180° flip (= 270° CW / 90° CCW)
     for (int dy = 0; dy < LCD_HEIGHT; dy++) {
         for (int dx = 0; dx < LCD_WIDTH; dx++) {
-#ifdef ROTATE_180
-            int sx = (rW - 1) - dy;
-            int sy = dx;
-#else
             int sx = dy;
             int sy = (rH - 1) - dx;
-#endif
             const unsigned char* p = rgba + ((size_t)sy * rW + sx) * 4;
             uint8_t a = p[3];
             uint8_t r = (uint8_t)(((uint16_t)p[0] * a + 255u * (255u - a)) / 255u);
@@ -141,6 +135,13 @@ static void show_svg(const char* path) {
             uint8_t b = (uint8_t)(((uint16_t)p[2] * a + 255u * (255u - a)) / 255u);
             linebuf[dx] = ((uint16_t)(r >> 3) << 11) | ((uint16_t)(g >> 2) << 5) | (uint16_t)(b >> 3);
         }
+#ifdef ROTATE_180
+        for (int i = 0; i < LCD_WIDTH / 2; i++) {
+            uint16_t tmp = linebuf[i];
+            linebuf[i] = linebuf[LCD_WIDTH - 1 - i];
+            linebuf[LCD_WIDTH - 1 - i] = tmp;
+        }
+#endif
         LCD_addWindow(0, dy, LCD_WIDTH - 1, dy, linebuf);
     }
     free(rgba);
@@ -157,7 +158,6 @@ static void show_next() {
 void setup() {
     Serial.begin(115200);
     Serial.printf("=== SVG Viewer ===\r\n");
-
     Flash_test();
     SD_Init();
     LCD_Init();

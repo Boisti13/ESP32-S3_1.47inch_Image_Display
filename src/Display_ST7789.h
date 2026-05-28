@@ -15,8 +15,9 @@
 #define Frequency       1000                    // PWM frequencyconst 
 #define Resolution      10                      
 
-#define VERTICAL   0
-#define HORIZONTAL 1
+#define VERTICAL           0
+#define HORIZONTAL         0
+#define HORIZONTAL_FLIPPED 1
 
 #define Offset_X 34
 #define Offset_Y 0
